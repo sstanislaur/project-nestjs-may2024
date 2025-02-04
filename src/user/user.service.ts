@@ -3,6 +3,7 @@ import { User } from './entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
+import { ILike } from 'typeorm';
 
 @Injectable()
 export class UserService {
@@ -69,6 +70,24 @@ export class UserService {
     } else {
       return this.usersRepository.findOne({ where: { email: idOrEmail } });
     }
+  }
+
+  async filterUsers(filters: any): Promise<Partial<User>[]> {
+    console.log('Received Filters:', filters);
+
+    const where: any = {};
+    if (filters.email) {
+      where.email = ILike(`%${filters.email}%`);
+    }
+    if (filters.role) {
+      where.role = filters.role;
+    }
+
+    console.log('Where Condition:', where);
+
+    const users = await this.usersRepository.find({ where });
+
+    return users.map(({ password, ...user }) => user);
   }
 
 }

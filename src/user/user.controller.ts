@@ -2,6 +2,7 @@ import {Controller, Post, Get, Body, UseGuards, Patch, Delete, Param, Req} from 
 import {UserService} from './user.service';
 import {JwtAuthGuard} from '../auth/jwt-auth.guard';
 import {User} from './entities/user.entity';
+import { Query } from '@nestjs/common';
 
 @Controller('users')
 export class UserController {
@@ -47,4 +48,12 @@ export class UserController {
         await this.userService.deleteUser(Number(id));
         return {message: 'User deleted successfully'};
     }
+
+    @Post('filter')
+    @UseGuards(JwtAuthGuard)
+    async filterUsers(@Body() filters: any) {
+        console.log('Received Filters:', filters); // Лог запиту
+        return this.userService.filterUsers(filters);
+    }
+
 }
