@@ -38,4 +38,38 @@ export class UserService {
   async findAll(): Promise<User[]> {
     return this.usersRepository.find();
   }
+
+
+  async updateUser(id: number, updateData: Partial<User>): Promise<User> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    if (updateData.password) {
+      updateData.password = await bcrypt.hash(updateData.password, 10);
+    }
+
+    Object.assign(user, updateData);
+    return await this.usersRepository.save(user);
+  }
+
+  async deleteUser(id: number): Promise<void> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    await this.usersRepository.delete(id);
+  }
+
+  async findOneByIdOrEmail(idOrEmail: string): Promise<User | null> {
+    if (!isNaN(Number(idOrEmail))) {
+      return this.usersRepository.findOne({ where: { id: Number(idOrEmail) } });
+    } else {
+      return this.usersRepository.findOne({ where: { email: idOrEmail } });
+    }
+  }
+
 }
+
