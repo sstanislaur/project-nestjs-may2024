@@ -1,21 +1,27 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { User } from '../../user/entities/user.entity';
-
 
 @Entity()
 export class Post {
     @PrimaryGeneratedColumn()
     id: number;
 
-    @Column()
+    @Column({ type: 'text' })
     text: string;
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    @ManyToOne(() => User, (user) => user.posts, { eager: true, onDelete: 'CASCADE' })
+    user: User;
+
+    @CreateDateColumn()
     createdAt: Date;
 
-    @Column({ type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
+    @UpdateDateColumn()
     updatedAt: Date;
-
-    @ManyToOne(() => User, (user) => user.posts)
-    user: User;
 }
+
+
+
+
+
+
+

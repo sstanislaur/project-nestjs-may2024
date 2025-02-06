@@ -1,17 +1,25 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Req, Delete, Param } from '@nestjs/common';
 import { PostService } from './post.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
 @Controller('posts')
 export class PostController {
   constructor(private readonly postService: PostService) {}
 
-  @Post()
-  async create(@Body() body: { text: string; userId: number }) {
-    return this.postService.createPost(body.text, body.userId);
+  @Get()
+  async findAll() {
+    return this.postService.findAll();
   }
 
-  @Get()
-  async getAll() {
-    return this.postService.getAllPosts();
+  @Post()
+  @UseGuards(JwtAuthGuard)
+  async createPost(@Body('text') text: string, @Req() req) {
+    return this.postService.createPost(text, req.user.id);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  async deletePost(@Param('id') id: number, @Req() req) {
+    return this.postService.deletePost(Number(id), req.user.id);
   }
 }

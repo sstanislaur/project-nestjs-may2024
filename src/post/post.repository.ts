@@ -13,6 +13,25 @@ export class PostRepository {
     }
 
     async findAll() {
-        return await this.repo.find();
+        return await this.repo.find({ relations: ['user'] });
+    }
+
+
+    async findById(postId: number) {
+        console.log(`Searching for post with ID: ${postId}`);
+        const post = await this.repo.findOne({ where: { id: postId }, relations: ['user'] });
+
+        if (!post) {
+            console.log(`Post with ID ${postId} not found`);
+        } else {
+            console.log(`Found post:`, post);
+        }
+
+        return post;
+    }
+
+
+    async deletePost(postId: number) {
+        return await this.repo.delete(postId);
     }
 }
