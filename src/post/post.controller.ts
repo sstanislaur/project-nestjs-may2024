@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Req, Delete, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Req, Delete, Param, ParseIntPipe, Put, Request } from '@nestjs/common';
 import { PostService } from './post.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -22,4 +22,16 @@ export class PostController {
   async deletePost(@Param('id') id: number, @Req() req) {
     return this.postService.deletePost(Number(id), req.user.id);
   }
+
+  @Put(':id')
+  @UseGuards(JwtAuthGuard)
+  async updatePost(
+      @Param('id', ParseIntPipe) postId: number,
+      @Request() req,
+      @Body('text') newText: string
+  ) {
+    const userId = req.user.id;
+    return await this.postService.updatePost(postId, userId, newText);
+  }
+
 }

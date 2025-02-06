@@ -37,8 +37,12 @@ export class PostRepository {
         return post;
     }
 
-
     async deletePost(postId: number) {
         return await this.postRepo.delete(postId);
     }
+
+    async savePost(post: Post) {
+        return await this.postRepo.save(post);
+    }
+
 }

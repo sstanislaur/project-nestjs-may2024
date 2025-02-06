@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { PostRepository } from './post.repository';
 
 @Injectable()
@@ -27,5 +27,27 @@ export class PostService {
     await this.postRepository.deletePost(postId);
     return { message: 'Post deleted successfully' };
   }
+
+  async updatePost(postId: number, userId: number, newText: string) {
+    if (!newText.trim()) {
+      throw new BadRequestException('Post text cannot be empty');
+    }
+
+    const post = await this.postRepository.findById(postId);
+
+    if (!post) {
+      throw new NotFoundException('Post not found');
+    }
+
+    if (post.user.id === userId) {
+      throw new ForbiddenException('You can only edit your own posts');
+    }
+
+    post.text = newText;
+    post.updatedAt = new Date();
+
+    return await this.postRepository.savePost(post);
+  }
+
 
 }
