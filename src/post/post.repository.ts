@@ -2,24 +2,31 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Post } from './entities/post.entity';
+import { User } from '../user/entities/user.entity';
 
 @Injectable()
 export class PostRepository {
-    constructor(@InjectRepository(Post) private repo: Repository<Post>) {}
+    constructor(
+        @InjectRepository(Post) private postRepo: Repository<Post>,
+        @InjectRepository(User) private userRepo: Repository<User>
+    ) {}
 
     async createPost(text: string, userId: number) {
-        const post = this.repo.create({ text, user: { id: userId } });
-        return await this.repo.save(post);
+        const user = await this.userRepo.findOne({ where: { id: userId } });
+        if (!user) throw new Error('User not found');
+
+        const post = this.postRepo.create({ text, user });
+        return await this.postRepo.save(post);
     }
 
     async findAll() {
-        return await this.repo.find({ relations: ['user'] });
+        return await this.postRepo.find({ relations: ['user'] });
     }
 
 
     async findById(postId: number) {
         console.log(`Searching for post with ID: ${postId}`);
-        const post = await this.repo.findOne({ where: { id: postId }, relations: ['user'] });
+        const post = await this.postRepo.findOne({ where: { id: postId }, relations: ['user'] });
 
         if (!post) {
             console.log(`Post with ID ${postId} not found`);
@@ -32,6 +39,6 @@ export class PostRepository {
 
 
     async deletePost(postId: number) {
-        return await this.repo.delete(postId);
+        return await this.postRepo.delete(postId);
     }
 }

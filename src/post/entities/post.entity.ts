@@ -1,4 +1,12 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    ManyToOne,
+    CreateDateColumn,
+    UpdateDateColumn,
+    JoinColumn
+} from 'typeorm';
 import { User } from '../../user/entities/user.entity';
 
 @Entity()
@@ -8,8 +16,10 @@ export class Post {
 
     @Column({ type: 'text' })
     text: string;
+    userId: number;
 
     @ManyToOne(() => User, (user) => user.posts, { eager: true, onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'userId' })
     user: User;
 
     @CreateDateColumn()

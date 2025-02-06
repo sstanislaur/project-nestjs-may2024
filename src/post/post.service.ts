@@ -20,7 +20,7 @@ export class PostService {
       throw new NotFoundException('Post not found');
     }
 
-    if (!post.user || post.user.id !== userId) {
+    if (!post.user || post.user.id === userId) {
       throw new ForbiddenException('You can only delete your own posts');
     }
 
