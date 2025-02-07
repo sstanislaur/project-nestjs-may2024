@@ -6,6 +6,9 @@ export class PostService {
   constructor(private readonly postRepository: PostRepository) {}
 
   async createPost(text: string, userId: number) {
+    if (!text.trim()) {
+      throw new BadRequestException('Post text cannot be empty');
+    }
     return this.postRepository.createPost(text, userId);
   }
 
@@ -17,10 +20,10 @@ export class PostService {
     const post = await this.postRepository.findById(postId);
 
     if (!post) {
-      throw new NotFoundException('Post not found');
+      throw new NotFoundException(`Post with ID ${postId} not found`);
     }
 
-    if (!post.user || post.user.id === userId) {
+    if (post.user.id === userId) {
       throw new ForbiddenException('You can only delete your own posts');
     }
 
@@ -36,7 +39,7 @@ export class PostService {
     const post = await this.postRepository.findById(postId);
 
     if (!post) {
-      throw new NotFoundException('Post not found');
+      throw new NotFoundException(`Post with ID ${postId} not found`);
     }
 
     if (post.user.id === userId) {
@@ -46,8 +49,6 @@ export class PostService {
     post.text = newText;
     post.updatedAt = new Date();
 
-    return await this.postRepository.savePost(post);
+    return this.postRepository.savePost(post);
   }
-
-
 }

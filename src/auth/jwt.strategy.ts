@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
@@ -9,18 +9,28 @@ dotenv.config();
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-    constructor(private usersService: UserService) {
+    private readonly logger = new Logger(JwtStrategy.name);
+
+    constructor(private readonly usersService: UserService) {
+        const secret = process.env.JWT_SECRET;
+        if (!secret) {
+            throw new Error('JWT_SECRET is not configured');
+        }
+
         super({
             jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-            secretOrKey: process.env.JWT_SECRET,
+            secretOrKey: secret,
         });
     }
 
     async validate(payload: JwtPayload) {
         const user = await this.usersService.findOne(payload.sub);
+
         if (!user) {
-            throw new Error('User not found');
+            this.logger.warn(`User with ID ${payload.sub} not found`);
+            throw new UnauthorizedException('User not found');
         }
+
         return user;
     }
 }

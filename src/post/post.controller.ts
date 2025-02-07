@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Req, Delete, Param, ParseIntPipe, Put, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Req, Delete, Param, ParseIntPipe, Put, Request, BadRequestException } from '@nestjs/common';
 import { PostService } from './post.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -13,14 +13,25 @@ export class PostController {
 
   @Post()
   @UseGuards(JwtAuthGuard)
-  async createPost(@Body('text') text: string, @Req() req) {
+  async createPost(
+      @Body('text') text: string,
+      @Request() req,
+  ) {
+    if (!text || text.trim().length === 0) {
+      throw new BadRequestException('Post text cannot be empty');
+    }
+
     return this.postService.createPost(text, req.user.id);
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete(':id')
-  async deletePost(@Param('id') id: number, @Req() req) {
-    return this.postService.deletePost(Number(id), req.user.id);
+  @UseGuards(JwtAuthGuard)
+  async deletePost(
+      @Param('id', ParseIntPipe) id: number,
+      @Request() req,
+  ) {
+    const userId = req.user.id;
+    return this.postService.deletePost(id, userId);
   }
 
   @Put(':id')
@@ -28,10 +39,14 @@ export class PostController {
   async updatePost(
       @Param('id', ParseIntPipe) postId: number,
       @Request() req,
-      @Body('text') newText: string
+      @Body('text') newText: string,
   ) {
     const userId = req.user.id;
-    return await this.postService.updatePost(postId, userId, newText);
-  }
 
+    if (!newText || newText.trim().length === 0) {
+      throw new BadRequestException('Post text cannot be empty');
+    }
+
+    return this.postService.updatePost(postId, userId, newText);
+  }
 }

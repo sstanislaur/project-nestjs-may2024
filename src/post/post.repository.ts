@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Post } from './entities/post.entity';
@@ -8,41 +8,37 @@ import { User } from '../user/entities/user.entity';
 export class PostRepository {
     constructor(
         @InjectRepository(Post) private postRepo: Repository<Post>,
-        @InjectRepository(User) private userRepo: Repository<User>
+        @InjectRepository(User) private userRepo: Repository<User>,
     ) {}
 
     async createPost(text: string, userId: number) {
         const user = await this.userRepo.findOne({ where: { id: userId } });
-        if (!user) throw new Error('User not found');
+        if (!user) throw new NotFoundException('User not found');
 
         const post = this.postRepo.create({ text, user });
-        return await this.postRepo.save(post);
+        return this.postRepo.save(post);
     }
 
     async findAll() {
-        return await this.postRepo.find({ relations: ['user'] });
+        return this.postRepo.find({ relations: ['user'] });
     }
 
-
-    async findById(postId: number) {
-        console.log(`Searching for post with ID: ${postId}`);
+    async findById(postId: number): Promise<Post | undefined> {
         const post = await this.postRepo.findOne({ where: { id: postId }, relations: ['user'] });
-
         if (!post) {
-            console.log(`Post with ID ${postId} not found`);
-        } else {
-            console.log(`Found post:`, post);
+            throw new NotFoundException(`Post with ID ${postId} not found`);
         }
-
         return post;
     }
 
-    async deletePost(postId: number) {
-        return await this.postRepo.delete(postId);
+    async deletePost(postId: number): Promise<void> {
+        const result = await this.postRepo.delete(postId);
+        if (result.affected === 0) {
+            throw new NotFoundException(`Post with ID ${postId} not found`);
+        }
     }
 
     async savePost(post: Post) {
-        return await this.postRepo.save(post);
+        return this.postRepo.save(post);
     }
-
 }
